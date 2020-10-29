@@ -8,6 +8,6 @@ namespace Metodicheskyi_MAGAZIN
     {
         public int id { get; set; }
         public int capacity { get; set; } = 50;
-        static public List<OrderItem> listOfOrderItems { get; set; }
+        static public List<Product> listOfOrderItems { get; set; }
     }
 }

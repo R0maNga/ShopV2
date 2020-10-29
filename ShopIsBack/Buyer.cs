@@ -17,6 +17,6 @@ namespace Metodicheskyi_MAGAZIN
         public DateTime dateOfBirth { get; set; }
         public DateTime dateOfRegister { get; set; }
         public int shoppingCartId { get; set; }
-        public List<Order> listOfOrders { get; set; }
+        public List<Product> listOfOrders { get; set; }
     }
 }

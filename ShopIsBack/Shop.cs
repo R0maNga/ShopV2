@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 
 namespace Metodicheskyi_MAGAZIN
 {
@@ -14,15 +15,13 @@ namespace Metodicheskyi_MAGAZIN
 
         public void InitShop(string name)
         {
-
-            ShoppingCart cart = new ShoppingCart();
             Console.WriteLine($"Welcome to the {name}!");
             initEnterPage();
 
 
             void initEnterPage()
             {
-                Console.WriteLine("--------------------------------\n--------------------------------\nPress 1 to Sign In\nPress 2 to Log In");
+                Console.WriteLine("--------------------------------\n--------------------------------\nPress 1 to Sign In\nPress 2 to Regestration to User\nPress 3 to Regestration to Manager");
                 string value = Console.ReadLine();
                 switch (value)
                 {
@@ -30,7 +29,13 @@ namespace Metodicheskyi_MAGAZIN
                         singIn();
                         break;
                     case "2":
-                        Regestration();
+                        regestrationUser();
+                        break;
+                    case "3":
+                        {
+
+                            regestrationManager();
+                        }
                         break;
                     default:
                         Console.WriteLine("Incorrect number");
@@ -39,7 +44,7 @@ namespace Metodicheskyi_MAGAZIN
                 }
             }
 
-            void Regestration()
+            void regestrationUser()
             {
                 Console.WriteLine("Login: ");
                 string login = Console.ReadLine();
@@ -58,6 +63,25 @@ namespace Metodicheskyi_MAGAZIN
                     initEnterPage();
                 }
             }
+            void regestrationManager()
+            {
+                Console.WriteLine("Login: ");
+                string loginManager = Console.ReadLine();
+                bool item = Db.Users.ContainsKey(loginManager);
+                if (!item)
+                {
+                    Console.WriteLine("Password: ");
+                    string password = Console.ReadLine();
+                    Console.WriteLine($"Hello {loginManager}");
+                    createManager(loginManager, password);
+                    managerMenu();
+                }
+                else
+                {
+                    Console.WriteLine("This user already exists");
+                    initEnterPage();
+                }
+            }
 
             void createUser(string user, string password)
             {
@@ -66,6 +90,14 @@ namespace Metodicheskyi_MAGAZIN
                 buyer.password = password.GetHashCode().ToString();
                 Db.Users[user] = buyer;
                 setCurrentUser(buyer);
+            }
+            void createManager(string loginManager, string password)
+            {
+                Manager manager = new Manager();
+                manager.name = loginManager;
+                manager.password = password.GetHashCode().ToString();
+                Db.Manager[loginManager] = manager;
+                setCurrentManager(manager);
             }
 
             void singIn()
@@ -116,7 +148,7 @@ namespace Metodicheskyi_MAGAZIN
                         openShoppingCart();
                         break;
                     case "3":
-
+                        showOrderList();
                         break;
                     case "4":
                         singOut();
@@ -138,15 +170,13 @@ namespace Metodicheskyi_MAGAZIN
             {
                 Db.currentUser = obj;
             }
-
+            void setCurrentManager(Manager obj)
+            {
+                Db.currentManager = obj;
+            }
             void showProductList()
             {
-                int count = 0;
-                foreach (Product prod in Db.products)
-                {
-                    count++;
-                    Console.WriteLine($"{count} - {prod.name}");
-                }
+                printList(Db.products);
                 string prodNum = Console.ReadLine();
                 int prodNumInt = Convert.ToInt32(prodNum);
                 showProductDescription(prodNumInt);
@@ -159,10 +189,10 @@ namespace Metodicheskyi_MAGAZIN
                 switch (value)
                 {
                     case "1":
-
+                        addProduct(prodNumInt, Db.shoppingcart);
                         break;
                     case "2":
-                        initMenu();
+                        managerMenu();
                         break;
                     default:
                         Console.WriteLine("Incorrect number");
@@ -173,13 +203,13 @@ namespace Metodicheskyi_MAGAZIN
 
             void managerMenu()
             {
-                Console.WriteLine("1-Add product to list\n2-Delete product from list\n3-Change product info");
+                Console.WriteLine("1-Add product to list\n2-Delete product from list\n3-Show product list\n4-Show product description");
                 string key = Console.ReadLine();
                 switch (key)
                 {
                     case "1":
                         {
-                            addNewProductToList();
+                            addProductToList();
                         }
                         break;
                     case "2":
@@ -189,9 +219,17 @@ namespace Metodicheskyi_MAGAZIN
                         break;
                     case "3":
                         {
-                            changeProductInfo();
+                            printList(Db.products);
+                            managerMenu();
                         }
                         break;
+                    case "4":
+                        {
+                            
+                            managerMenu();
+                        }
+                        break;
+                    
                     default:
                         {
                             Console.WriteLine("Incorrect number");
@@ -201,37 +239,115 @@ namespace Metodicheskyi_MAGAZIN
                 }
             }
 
-            void addProductToShoppingCart()
+            void addProduct(int prodNumInt, List<Product> list)
             {
-                var a = Db.products.Find(l => l.name == "lays");
+                
+                list.Add(Db.products[prodNumInt - 1]);
 
-                ShoppingCart.listOfOrderItems.Add(Order.listOfOrderItems);
+                showProductDescription(prodNumInt);
+
             }
             void openShoppingCart()
             {
-                Console.WriteLine(ShoppingCart.listOfOrderItems);
-            }
+                printList(Db.shoppingcart);
+                Console.WriteLine("Нажмите на цифру для добавления продукта в чек");
+                var productNumb = Console.ReadLine();
+                int productNumbInt = Convert.ToInt32(productNumb);
 
+                Console.WriteLine("Choose amount");
+                string amount = Console.ReadLine();
+
+                Db.shoppingcart[productNumbInt - 1].amount = amount;
+                Db.orderlist.Add(Db.shoppingcart[productNumbInt-1]);
+               
+                initMenu();
+            }
+            
             void deleteProduct()
             {
-                //Db.products.RemoveAt();
+                printList(Db.products);
+                Console.WriteLine("Введите какой продукт удалить");
+                string numb=Console.ReadLine();
+                int number = Convert.ToInt32(numb);
+                Db.products.Remove(Db.products[number-1]);
+                initMenu();
             }
 
-            void changeProductInfo()
+            void adProduct(Product newProd)
             {
-
+                Db.products.Add(newProd);
+                initMenu();
             }
-            void addNewProductToList()
+            void changeProductInfo(Product newProd)
             {
-
+                Console.WriteLine("введите доп инфу");
+                var description=Console.ReadLine();
+                newProd.description = description;
+                Db.products.Add(newProd);
+                initMenu();
             }
-            void showDescriptionOfProducts()
+            void addProductToList()
             {
-                foreach (Product describ in Db.description)
+                Product newProd = new Product();
+                Console.WriteLine("Введите название продукта");
+                var name =Console.ReadLine();
+                newProd.name = name;
+                Console.WriteLine("1-Поменять доп инфу\n2-Добавить продукт");
+                var a=Console.ReadLine();
+                switch (a)
                 {
+                    case "1":
+                        {
+                            changeProductInfo(newProd);
+                            
+                        }
+                        break;
+                    case "2":
+                        {
+                            adProduct(newProd);
+                        }
+                        break;
 
-                    Console.WriteLine($"{describ.name}");
+                    default:
+                        {
+                            Console.WriteLine("Не то число");
+                        }
+                        break;
                 }
+            }
+           
+
+            void showProductInfo(int valueInt)
+            {
+                Console.WriteLine($"amount: {Db.orderlist[valueInt - 1].amount}");
+                Console.WriteLine($"description: {Db.orderlist[valueInt - 1].description}");
+            }
+            
+            void printList(List<Product> list)
+            {
+                int count = 0;
+                foreach (Product prod in list)
+                {
+                    count++;
+                    Console.WriteLine($"{count} - {prod.name}");
+
+
+                }
+            }
+
+            void showOrderList()
+            {
+                printList(Db.orderlist);
+                var value = Console.ReadLine();
+                int valueInt = Convert.ToInt32(value);
+                showProductInfo(valueInt);
+
+                initMenu();
+                /*printList(Db.orderlist);
+                var value = Console.ReadLine();
+                int valueInt = Convert.ToInt32(product);
+
+                initMenu();*/
             }
 
         }

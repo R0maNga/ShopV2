@@ -9,6 +9,6 @@ namespace Metodicheskyi_MAGAZIN
         public int id { get; set; }
         public int buyerId { get; set; }
         public DateTime dateOfOrder { get; set; }
-        public static List<OrderItem> listOfOrderItems { get; set; }
+        public static List<Product> listOfOrderItems { get; set; }
     }
 }
